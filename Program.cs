@@ -1,15 +1,17 @@
+using MatchNow.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SocialMedia.Models;
 using System.Text;
+
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddDbContext<SocialMediaDb>(
-    optionsAction => optionsAction.UseSqlServer(connectionString: "Server=MIRCEA;Database=SocialMedia;Trusted_Connection=True;TrustServerCertificate=true;"));
+builder.Services.AddDbContext<MatchNowDb>(
+    optionsAction => optionsAction.UseSqlServer(connectionString: "Server=.;Database=MatchNow;Trusted_Connection=True;TrustServerCertificate=true;"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -26,6 +28,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name:MyAllowSpecificOrigins,builder =>
+    {
+        builder.WithOrigins("http://localhost:4200/")
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -40,7 +53,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 

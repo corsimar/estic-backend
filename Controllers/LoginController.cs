@@ -1,14 +1,14 @@
-﻿using MatchNow;
-using MatchNow.DTOs;
+﻿using MatchNow.DTOs;
+using MatchNow.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using SocialMedia.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web.Http.Cors;
 
 namespace SocialMedia.Controllers
 {
@@ -16,11 +16,11 @@ namespace SocialMedia.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
-        private readonly SocialMediaDb _socialMediaDb;
+        private readonly MatchNowDb _matchNowDb;
         private readonly IConfiguration _config;
-        public LoginController(SocialMediaDb socialMediaDb, IConfiguration config)
+        public LoginController(MatchNowDb matchNowDb, IConfiguration config)
         {
-            _socialMediaDb = socialMediaDb;
+            _matchNowDb = matchNowDb;
             _config = config;
 
         }
@@ -29,16 +29,16 @@ namespace SocialMedia.Controllers
         public ActionResult LogIn([FromBody]UserDTO payload)
         {
            var payloadHashedPassword = HashPassword(payload.Password); 
-           var existingUser = _socialMediaDb.Users
+           var existingUser = _matchNowDb.Users
                 .Where(u => u.Email == payload.Email
                 && u.Password == payloadHashedPassword)
                 .SingleOrDefault();
             if (existingUser == null)
             {
-                return NotFound("Email or password incorrect");
+                return NotFound("Email or password are incorrect!");
             }
             var jwt = GenerateJSONWebToken(existingUser);
-            return Ok(jwt);
+            return Ok(new { token = jwt, userId = existingUser.UserId });
         }
 
         [AllowAnonymous]
